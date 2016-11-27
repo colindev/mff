@@ -26,8 +26,8 @@ const (
 )
 
 type Job struct {
-	Name       string `json:"name" gorm:"column:name;primary_key"`
-	Class      `json:"class" gorm:"column:class;index"`
+	Name       string    `json:"name" gorm:"column:name;primary_key"`
+	Class      string    `json:"class" gorm:"column:class;index"`
 	Elements   []Element `json:"elements" gorm:"-"`
 	ElementsDB string    `json:"-" gorm:"column:elements"`
 }
@@ -64,8 +64,8 @@ func (j *Job) AfterFind() error {
 
 type Card struct {
 	Name     string `json:"name" gorm:"column:name;primary_key"`
-	Class    `json:"class" gorm:"column:class;index"`
-	Element  `json:"element" gorm:"column:element;index"`
+	Class    string `json:"class" gorm:"column:class;index"`
+	Element  string `json:"element" gorm:"column:element;index"`
 	Describe string `json:"describe" gorm:"column:describe;type:text"`
 }
 

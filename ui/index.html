@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <meta content-type="text/html" charset="utf-8">
+    </head>
+    <body>
+    <fieldset>
+        <legend>職業</legend>
+        <label>
+            <input type="checkbox" value="class:遊俠">遊俠
+        </label>
+        <label>
+            <input type="checkbox" value="class:戰士">戰士
+        </label>
+        <label>
+            <input type="checkbox" value="class:魔導士">魔導士
+        </label>
+    </fieldset>
+    <fieldset>
+        <legend>屬性</legend>
+        <label>
+            <input type="checkbox" value="element:火">火
+        </label>
+        <label>
+            <input type="checkbox" value="element:風">風
+        </label>
+        <label>
+            <input type="checkbox" value="element:土">土
+        </label>
+        <label>
+            <input type="checkbox" value="element:水">水
+        </label>
+        <label>
+            <input type="checkbox" value="element:光">光
+        </label>
+        <label>
+            <input type="checkbox" value="element:闇">闇
+        </label>
+    </fieldset>
+    <div id="display"></div>        
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script>
+(function(){
+ var temp = `<div class="{Name}"></div>`;
+
+    $.get("/api/jobs", function(json, xhr){
+       console.log(json) 
+    });
+    $.get("/api/cards", function(json, xhr){
+       console.log(json) 
+    });
+})()
+    </script>
+    </body>
+</html>

@@ -44,9 +44,6 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db = db.
-		Set("gorm:table_options", "ENGINE=InnoDB").
-		Set("gorm:table_options", "charset=utf8")
 
 	if env.Debug {
 		db = db.Debug()
@@ -74,11 +71,14 @@ func main() {
 		}
 		api.SetApp(router)
 
+		server := http.NewServeMux()
 		listener, err := net.Listen("tcp", env.PublicAddr)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Println("public server:", http.Serve(listener, http.StripPrefix("/api", api.MakeHandler())))
+		server.Handle("/ui/", http.StripPrefix("/ui", http.FileServer(http.Dir(env.PublicUI))))
+		server.Handle("/api/", http.StripPrefix("/api", api.MakeHandler()))
+		log.Println("admin server:", http.Serve(listener, server))
 	}()
 	go func() {
 		api := rest.NewApi()
@@ -96,11 +96,13 @@ func main() {
 		}
 		api.SetApp(router)
 
+		server := http.NewServeMux()
 		listener, err := net.Listen("tcp", env.AdminAddr)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Println("admin server:", http.Serve(listener, http.StripPrefix("/api", api.MakeHandler())))
+		server.Handle("/api/", http.StripPrefix("/api", api.MakeHandler()))
+		log.Println("admin server:", http.Serve(listener, server))
 	}()
 
 	shutdown := make(chan os.Signal, 1)
@@ -130,10 +132,6 @@ func getJobs(w rest.ResponseWriter, r *rest.Request) {
 
 	if classes := strings.TrimSpace(query.Get("classes")); classes != "" {
 		db = db.Where("class IN (?)", strings.Split(classes, ","))
-	}
-
-	if elements := strings.TrimSpace(query.Get("elements")); elements != "" {
-		db = db.Where("element IN (?)", strings.Split(elements, ","))
 	}
 
 	if err := db.Find(&list).Error; err != nil {
@@ -176,8 +174,54 @@ func deleteJob(w rest.ResponseWriter, r *rest.Request) {
 
 // card
 func getCards(w rest.ResponseWriter, r *rest.Request) {
+	var (
+		db    = cards
+		list  []Card
+		query = r.URL.Query()
+	)
+
+	if classes := strings.TrimSpace(query.Get("classes")); classes != "" {
+		db = db.Where("class IN (?)", strings.Split(classes, ","))
+	}
+
+	if elements := strings.TrimSpace(query.Get("elements")); elements != "" {
+		db = db.Where("element IN (?)", strings.Split(elements, ","))
+	}
+
+	if err := db.Find(&list).Error; err != nil {
+		w.WriteJson(Error{err})
+		return
+	}
+
+	w.WriteJson(list)
 }
 func postCard(w rest.ResponseWriter, r *rest.Request) {
+	var (
+		card Card
+	)
+
+	if err := json.NewDecoder(r.Body).Decode(&card); err != nil {
+		w.WriteJson(Error{err})
+		return
+	}
+
+	if err := jobs.Save(card).Error; err != nil {
+		w.WriteJson(Error{err})
+		return
+	}
+
+	w.WriteJson(card)
 }
 func deleteCard(w rest.ResponseWriter, r *rest.Request) {
+	name, err := url.QueryUnescape(r.PathParams["name"])
+	if err != nil {
+		w.WriteJson(Error{err})
+	}
+
+	if err := jobs.Where("name = ?", name).Delete(Card{}).Error; err != nil {
+		w.WriteJson(Error{err})
+		return
+	}
+
+	w.WriteJson(ok)
 }

@@ -8,6 +8,7 @@ type environments struct {
 	DSN        string `env:"DSN"`
 	AdminAddr  string `env:"ADMIN_ADDR"`
 	PublicAddr string `env:"PUBLIC_ADDR"`
+	PublicUI   string `env:"PUBLIC_UI"`
 }
 
 func (env *environments) String() string {
@@ -17,10 +18,12 @@ func (env *environments) String() string {
 	DSN: %s
 	AdminAddr: %s
 	PublicAddr: %s
+	PublicUI: %s
 	`,
 		env.path,
 		env.Debug,
 		env.DSN,
 		env.AdminAddr,
-		env.PublicAddr)
+		env.PublicAddr,
+		env.PublicUI)
 }
