@@ -1,6 +1,29 @@
 <html>
     <head>
         <meta content-type="text/html" charset="utf-8">
+        <style>
+        .card {}
+        .card-icon, .card-element {
+            display: inline-block;
+            background: center center no-repeat;
+        }
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #AAA;
+            border-radius: 3px;
+        }
+        .card-element {
+            width: 44px;
+            height: 44px;
+        }
+
+        .card p {
+            display: inline-block;
+            width: 500px;
+        }
+        
+        </style>
     </head>
     <body>
     <fieldset>
@@ -36,19 +59,72 @@
             <input type="checkbox" value="element:闇">闇
         </label>
     </fieldset>
+    <fieldset>
+        <legend>關鍵字</legend>
+        <label>
+            <input id="keyword" type="text" value="">
+        </label>
+    </fieldset>
     <div id="display"></div>        
 
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script>
 (function(){
- var temp = `<div class="{Name}"></div>`;
+ var temp = `<div class="{Name}"></div>`,
+    $keyword = $('#keyword'),
+    $checkbox = $('fieldset input[type=checkbox]'),
+    buildRegExp = function() {
+        var classes = [], elements = [];
+        $checkbox.each(function (i, inp) {
+            if ( ! inp.checked) return;
+            var v = inp.value.split(/:/);
+            switch (v[0]) {
+                case "class": classes.push(v[1]); break
+                case "element": elements.push(v[1]); break
+            }
+        });
 
-    $.get("/api/jobs", function(json, xhr){
-       console.log(json) 
-    });
+        if (classes.length == 0) {
+            classes.push('.+');
+        }
+        if (elements.length == 0) {
+            elements.push('.+');
+        }
+
+        return new RegExp('^('+classes.join('|')+'):('+elements.join('|')+')$')
+    },
+    buildKeywordRegExp = function(){
+        if (!$keyword.val().replace(/\s/g, '')) return /.*/;
+
+        return new RegExp($keyword.val().replace(/\s*,\s*/, '|'));
+    },
+    $display = $('#display'),
+    $cards;
+
     $.get("/api/cards", function(json, xhr){
-       console.log(json) 
+        var html = '';
+        $(json).each(function(i, c){
+            html += `<div class="card" rel="${c.class}:${c.element}" >
+                        <span class="card-icon" style="background-image:url(/ui/assets/img/cards/${c.name}.png)"></span>
+                        <span class="card-element" style="background-image:url(/ui/assets/img/elements/${c.element}.png)"></span>
+                        <p>${c.describe}</p>
+                    </div>`;    
+        });
+        $display.html(html);
+        $cards = $display.find('.card');
     });
+    function filter(el){
+        var re = buildRegExp(), reKeyword = buildKeywordRegExp();
+        $cards.each(function(i, c){
+            if (re.test(c.getAttribute("rel")) && reKeyword.test(c.innerHTML)) {
+                c.style.display = "";
+            } else {
+                c.style.display = "none";
+            }
+        })    
+    }
+    $('fieldset input[type=checkbox]').on("change", filter);
+    $keyword.on("change", filter);
 })()
     </script>
     </body>
